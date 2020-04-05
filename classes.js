@@ -31,7 +31,7 @@ export class Player {
     );
   }
 }
-
+/* 
 export class Wall {
   constructor(field, x, y) {
     this._field = field;
@@ -88,3 +88,4 @@ export class WallStructure {
     }
   }
 }
+ */

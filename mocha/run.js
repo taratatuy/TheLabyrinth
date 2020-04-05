@@ -1,4 +1,4 @@
-import './tests/classes.test.js';
+import './tests/grid.test.js';
 
 mocha.checkLeaks();
 mocha.run();
