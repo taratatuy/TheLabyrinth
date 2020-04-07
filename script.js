@@ -16,21 +16,21 @@ function init() {
   drawable.push(cageStrcture);
 
   player = new Player(field, 10, 10);
-  cageStrcture.setLight(player.getX(), player.getY());
   drawable.push(player);
+  cageStrcture.setLight(player.getX(), player.getY());
 
   draw();
 }
 
-function step(key) {
+function step(shiftX, shiftY) {
   if (
     cageStrcture.filled(
-      player.getX() + stepKeys[key].x,
-      player.getY() + stepKeys[key].y
+      player.getX() + shiftX,
+      player.getY() + shiftY
     ) instanceof Floor
   ) {
     cageStrcture.unsetLight(player.getX(), player.getY());
-    player.turn(stepKeys[key].x, stepKeys[key].y);
+    player.turn(shiftX, shiftY);
     cageStrcture.setLight(player.getX(), player.getY());
   }
 
@@ -38,16 +38,13 @@ function step(key) {
 }
 
 function draw() {
-  field.fillStyle = 'black';
-  field.fillRect(0, 0, field.width, field.height);
-
   drawable.forEach((obj) => {
     obj.draw();
   });
 }
 
 addEventListener('keydown', (e) => {
-  if (e.key in stepKeys) step(e.key);
+  if (e.key in stepKeys) step(stepKeys[e.key].x, stepKeys[e.key].y);
 });
 
 init();

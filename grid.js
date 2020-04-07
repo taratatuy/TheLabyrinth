@@ -82,13 +82,13 @@ export class CageStructure {
       for (let y = 1; y < this._ySize + 1; y++) {
         if (this._structure[x][y] instanceof Floor)
           this._structure[x][y].setNeighbour([
-            this._structure[x - 1][y - 1],
             this._structure[x - 1][y],
-            this._structure[x - 1][y + 1],
+            this._structure[x + 1][y],
             this._structure[x][y - 1],
             this._structure[x][y + 1],
+            this._structure[x - 1][y - 1],
+            this._structure[x - 1][y + 1],
             this._structure[x + 1][y - 1],
-            this._structure[x + 1][y],
             this._structure[x + 1][y + 1],
           ]);
       }
@@ -115,7 +115,7 @@ export class CageStructure {
   }
 
   unsetLight(x, y) {
-    this._structure[x][y].unsetLightLevel(4);
+    this._structure[x][y].unsetLightLevel();
   }
 
   draw() {
@@ -133,13 +133,14 @@ export class Cage {
     this._field = field;
     this.x = x;
     this.y = y;
-    this.color = 'yellow';
+    this.currentColor = 'black';
+    this._initialСolor = 'black';
     this.cageSize = 20;
     this._lightLevel = 0;
   }
 
   draw() {
-    this._field.fillStyle = this.color;
+    this._field.fillStyle = this.currentColor;
     this._field.fillRect(
       this.cageSize * this.x,
       this.cageSize * this.y,
@@ -153,27 +154,44 @@ export class Cage {
 export class Floor extends Cage {
   constructor(...args) {
     super(...args);
-    this.color = 'black';
-    this._initialСolor = 'black';
     this._neighbours = [];
   }
 
-  // Experemental algorithm.
+  // Experemental algorithm based on neighbours.
   // 952 iterations for n = 5
   setLightLevel(lightLevel) {
     if (lightLevel > this._lightLevel) {
       this._lightLevel = lightLevel;
-      this.color = `rgb(${51 * this._lightLevel}, 0, 0)`;
+      this.currentColor = `rgb(${51 * this._lightLevel}, ${
+        51 * this._lightLevel
+      }, ${51 * this._lightLevel})`;
+
       this._neighbours.forEach((neighbour) => {
         neighbour.setLightLevel(this._lightLevel - 1);
       });
+
+      /* 
+      // Algorithm for rhomboid spread of light:
+      // ----------
+      let i = 0; // i = 0-3: straight lines, 4-7: diagonal lines
+      this._neighbours.forEach((neighbour) => {
+        if (i < 4) {
+          neighbour.setLightLevel(this._lightLevel - 1);
+          i++;
+        } else {
+          neighbour.setLightLevel(this._lightLevel - 2);
+          i++;
+        }
+      });
+      // ----------
+      */
     }
   }
 
   unsetLightLevel() {
     if (this._lightLevel != 0) {
       this._lightLevel = 0;
-      this.color = this._initialСolor;
+      this.currentColor = this._initialСolor;
       this._neighbours.forEach((neighbour) => {
         neighbour.unsetLightLevel();
       });
@@ -187,20 +205,14 @@ export class Floor extends Cage {
 
 // Wall cage
 export class Wall extends Cage {
-  constructor(...args) {
-    super(...args);
-    this.color = 'black';
-    this._initialСolor = 'black';
-  }
-
   setLightLevel(lightLevel) {
     this._lightLevel =
       this._lightLevel < lightLevel ? lightLevel : this._lightLevel;
-    this.color = `rgb(0, 0, ${51 * this._lightLevel})`;
+    this.currentColor = `rgb(0, 0, ${51 * this._lightLevel})`;
   }
 
   unsetLightLevel() {
     this._lightLevel = 0;
-    this.color = this._initialСolor;
+    this.currentColor = this._initialСolor;
   }
 }
