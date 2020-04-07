@@ -2,15 +2,95 @@ export class CageStructure {
   constructor(field) {
     this.field = field;
     this._structure = {};
-    this._xSize = 20;
-    this._ySize = 20;
+    this._xSize = 23;
+    this._ySize = 23;
 
+    this._buildFlooreSpace();
+    this._buildWallBorder();
+    this._buildLevel();
+    this._setNeighbours();
+  }
+
+  // Building emty floore space O(n^2):
+  _buildFlooreSpace() {
     for (let x = 1; x < this._xSize + 1; x++) {
       for (let y = 1; y < this._ySize + 1; y++) {
         this._structure[x] = {
           ...this._structure[x],
           [y]: new Floor(this.field, x, y),
         };
+      }
+    }
+  }
+
+  // Building wall border O(2n):
+  _buildWallBorder() {
+    for (let x = 0; x <= this._xSize + 1; x++) {
+      this._structure[x] = {
+        ...this._structure[x],
+        [0]: new Wall(this.field, x, 0),
+      };
+
+      this._structure[x] = {
+        ...this._structure[x],
+        [this._ySize + 1]: new Wall(this.field, x, this._ySize + 1),
+      };
+    }
+
+    for (let y = 1; y < this._ySize + 1; y++) {
+      this._structure[0] = {
+        ...this._structure[0],
+        [y]: new Wall(this.field, 0, y),
+      };
+
+      this._structure[this._xSize + 1] = {
+        ...this._structure[this._xSize + 1],
+        [y]: new Wall(this.field, this._xSize + 1, y),
+      };
+    }
+  }
+
+  // [TBD] some building function later
+  // ----------
+  _buildLevel() {
+    this.addMatrix([
+      [11, 10],
+      [9, 10],
+      [10, 9],
+      [10, 11],
+      [14, 17],
+      [14, 16],
+      [14, 15],
+      [14, 14],
+      [14, 13],
+      [14, 12],
+      [14, 11],
+      [12, 17],
+      [12, 16],
+      [12, 15],
+      [12, 14],
+      [12, 13],
+      [12, 12],
+      [12, 11],
+    ]);
+  }
+  // ----------
+
+  // Set all neighbours for every Floor cage O(n^2):
+  _setNeighbours() {
+    for (let x = 1; x < this._xSize + 1; x++) {
+      for (let y = 1; y < this._ySize + 1; y++) {
+        if (this._structure[x][y] instanceof Floor)
+          this._structure[x][y].setNeighbour([
+            this._structure[x - 1][y - 1],
+            this._structure[x - 1][y],
+            this._structure[x - 1][y + 1],
+            this._structure[x][y - 1],
+            this._structure[x][y + 1],
+            this._structure[x + 1][y - 1],
+            this._structure[x + 1][y],
+            this._structure[x + 1][y + 1],
+          ]);
       }
     }
   }
@@ -30,7 +110,13 @@ export class CageStructure {
     return this._structure[x] ? this._structure[x][y] : undefined;
   }
 
-  changeLight(x, y) {}
+  setLight(x, y) {
+    this._structure[x][y].setLightLevel(4);
+  }
+
+  unsetLight(x, y) {
+    this._structure[x][y].unsetLightLevel(4);
+  }
 
   draw() {
     for (let x in this._structure) {
@@ -41,14 +127,15 @@ export class CageStructure {
   }
 }
 
-// Class Cage for extends
+// Class Cage for next extends
 export class Cage {
   constructor(field, x, y) {
     this._field = field;
     this.x = x;
     this.y = y;
-    this.color = 'blue';
+    this.color = 'yellow';
     this.cageSize = 20;
+    this._lightLevel = 0;
   }
 
   draw() {
@@ -62,15 +149,58 @@ export class Cage {
   }
 }
 
+// Stepable floor cage
 export class Floor extends Cage {
   constructor(...args) {
     super(...args);
-    this.color = 'grey';
+    this.color = 'black';
+    this._initialСolor = 'black';
+    this._neighbours = [];
+  }
+
+  // Experemental algorithm.
+  // 952 iterations for n = 5
+  setLightLevel(lightLevel) {
+    if (lightLevel > this._lightLevel) {
+      this._lightLevel = lightLevel;
+      this.color = `rgb(${51 * this._lightLevel}, 0, 0)`;
+      this._neighbours.forEach((neighbour) => {
+        neighbour.setLightLevel(this._lightLevel - 1);
+      });
+    }
+  }
+
+  unsetLightLevel() {
+    if (this._lightLevel != 0) {
+      this._lightLevel = 0;
+      this.color = this._initialСolor;
+      this._neighbours.forEach((neighbour) => {
+        neighbour.unsetLightLevel();
+      });
+    }
+  }
+
+  setNeighbour(array) {
+    this._neighbours = array;
   }
 }
 
+// Wall cage
 export class Wall extends Cage {
-  changeCollor(color) {
-    this._color = color;
+  constructor(...args) {
+    super(...args);
+    this.color = 'black';
+    this._initialСolor = 'black';
+  }
+
+  setLightLevel(lightLevel) {
+    this._lightLevel =
+      this._lightLevel < lightLevel ? lightLevel : this._lightLevel;
+    this.color = `rgb(0, 0, ${51 * this._lightLevel})`;
+  }
+
+  unsetLightLevel() {
+    this._lightLevel = 0;
+    this.color = this._initialСolor;
   }
 }
